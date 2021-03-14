@@ -45,15 +45,18 @@ public class Jogo extends ApplicationAdapter {
     private float espacoEntreCanos;
     private Random random;
     private int pontos = 0;
-    private int pontuacaoMaxima = 0;
+    private int pontuacaoMaxima;
     private boolean passouCano = false;
     private int estadoJogo = 0;
     private float posicaoHorizontalPassaro = 0;
+    private int velocidadeCano = 200;
+    private int variacaoCano = 200;
 
     //Exibição de textos
     BitmapFont textoPontuacao;
     BitmapFont textoReiniciar;
     BitmapFont textoMelhorPontuacao;
+    BitmapFont textoInicio;
 
     //Configuração dos sons
     Sound somVoando;
@@ -85,6 +88,7 @@ public class Jogo extends ApplicationAdapter {
         validarPontos();
         desenharTexturas();
         detectarColisoes();
+        aumentandoDificuldade();
 
     }
 
@@ -137,10 +141,10 @@ public class Jogo extends ApplicationAdapter {
             }
 
             //Movimentar cano
-            posicaoCanoHorizontal -= Gdx.graphics.getDeltaTime() * 200;
+            posicaoCanoHorizontal -= Gdx.graphics.getDeltaTime() * velocidadeCano;
             if (posicaoCanoHorizontal < -canoTopo.getWidth()) {
                 posicaoCanoHorizontal = larguraDispositivo;
-                posicaoCanoVertical = random.nextInt(400) - 200;
+                posicaoCanoVertical = random.nextInt(500) - variacaoCano;
                 passouCano = false;
             }
 
@@ -172,6 +176,9 @@ public class Jogo extends ApplicationAdapter {
                 posicaoHorizontalPassaro = 0;
                 posicaoInicialVerticalPassaro = alturaDispositivo / 2;
                 posicaoCanoHorizontal = larguraDispositivo;
+                velocidadeCano = 200;
+                variacaoCano = 200;
+                passouCano = false;
             }
 
         }
@@ -188,6 +195,9 @@ public class Jogo extends ApplicationAdapter {
         batch.draw(canoTopo, posicaoCanoHorizontal, alturaDispositivo / 2 + espacoEntreCanos / 2 + posicaoCanoVertical);
         textoPontuacao.draw(batch, String.valueOf(pontos), larguraDispositivo / 2 - 50, alturaDispositivo - 100);
 
+        if (estadoJogo == 0) {
+            textoInicio.draw(batch, "Toque para iniciar", larguraDispositivo / 2 - 200, alturaDispositivo / 2);
+        }
         if (estadoJogo == 2) {
             batch.draw(gameOver, larguraDispositivo / 2 - gameOver.getWidth() / 2, alturaDispositivo / 2);
             textoReiniciar.draw(batch, "Toque para reiniciar!", larguraDispositivo / 2 - 140, alturaDispositivo / 2 - gameOver.getHeight() / 2);
@@ -198,7 +208,7 @@ public class Jogo extends ApplicationAdapter {
     }
 
     public void validarPontos() {
-        if (posicaoCanoHorizontal < 50 + posicaoHorizontalPassaro - passaros[0].getWidth()) {//Passou da posicao do passaro
+        if (posicaoCanoHorizontal < 50 - passaros[0].getWidth()-2) {//Passou da posicao do passaro
             if (!passouCano) {
                 pontos++;
                 passouCano = true;
@@ -212,6 +222,22 @@ public class Jogo extends ApplicationAdapter {
         //Verifica variação para bater asas do pássaro
         if (variacao > 3)
             variacao = 0;
+    }
+
+    private void aumentandoDificuldade() {
+        if (pontos >= 10) {
+            velocidadeCano = 400;
+            variacaoCano = 250;
+        } else if (pontos >= 15) {
+            velocidadeCano = 600;
+            variacaoCano = 300;
+        } else if (pontos >= 20) {
+            velocidadeCano = 1000;
+            variacaoCano = 350;
+        } else if(pontos >= 30){
+            velocidadeCano = 1500;
+            variacaoCano = 400;
+        }
     }
 
     public void desenharObjetos() {
@@ -273,6 +299,10 @@ public class Jogo extends ApplicationAdapter {
         textoMelhorPontuacao.setColor(Color.RED);
         textoMelhorPontuacao.getData().setScale(2);
 
+        textoInicio = new BitmapFont();
+        textoInicio.setColor(Color.WHITE);
+        textoInicio.getData().setScale(4);
+
         //Formas geométricas para colisões
         shapeRenderer = new ShapeRenderer();
         circuloPassaro = new Circle();
@@ -286,7 +316,7 @@ public class Jogo extends ApplicationAdapter {
 
         //Configura preferencias dos objetos
         preferencias = Gdx.app.getPreferences("flappyBird");
-        pontuacaoMaxima = preferencias.getInteger("pontuacaoMaxima", 0);
+        pontuacaoMaxima = preferencias.getInteger("pontuacaoMaxima",0);
 
         //Configuração da Câmera
         camera = new OrthographicCamera();
