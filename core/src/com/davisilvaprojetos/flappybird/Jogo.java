@@ -6,6 +6,7 @@ import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -13,6 +14,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.Random;
 
@@ -60,6 +63,12 @@ public class Jogo extends ApplicationAdapter {
     //Objeto salvar pontuacao
     Preferences preferencias;
 
+    //Objetos para câmera
+    private OrthographicCamera camera;
+    private Viewport viewport;
+    private final float VIRTUAL_WIDTH = 720;
+    private final float VIRTUAL_HEIGHT = 1280;
+
     @Override
     public void create() {
         inicializarTexturas();
@@ -68,6 +77,9 @@ public class Jogo extends ApplicationAdapter {
 
     @Override
     public void render() {
+        //Limpar frames anteriores
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+
         verificarEstadoJogo();
         baterAsasPassaro();
         validarPontos();
@@ -167,6 +179,7 @@ public class Jogo extends ApplicationAdapter {
     }
 
     private void desenharTexturas() {
+        batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
         batch.draw(fundo, 0, 0, larguraDispositivo, alturaDispositivo);
@@ -185,7 +198,7 @@ public class Jogo extends ApplicationAdapter {
     }
 
     public void validarPontos() {
-        if (posicaoCanoHorizontal < 50 - passaros[0].getWidth()) {//Passou da posicao do passaro
+        if (posicaoCanoHorizontal < 50 + posicaoHorizontalPassaro - passaros[0].getWidth()) {//Passou da posicao do passaro
             if (!passouCano) {
                 pontos++;
                 passouCano = true;
@@ -241,8 +254,8 @@ public class Jogo extends ApplicationAdapter {
     private void inicializarObjetos() {
         batch = new SpriteBatch();
         random = new Random();
-        larguraDispositivo = Gdx.graphics.getWidth();
-        alturaDispositivo = Gdx.graphics.getHeight();
+        larguraDispositivo = VIRTUAL_WIDTH;
+        alturaDispositivo = VIRTUAL_HEIGHT;
         posicaoInicialVerticalPassaro = alturaDispositivo / 2;
         posicaoCanoHorizontal = larguraDispositivo;
         espacoEntreCanos = 300;
@@ -274,6 +287,16 @@ public class Jogo extends ApplicationAdapter {
         //Configura preferencias dos objetos
         preferencias = Gdx.app.getPreferences("flappyBird");
         pontuacaoMaxima = preferencias.getInteger("pontuacaoMaxima", 0);
+
+        //Configuração da Câmera
+        camera = new OrthographicCamera();
+        camera.position.set(VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2, 0);
+        viewport = new StretchViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera);
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        viewport.update(width, height);
     }
 
     @Override
