@@ -165,6 +165,7 @@ public class Jogo extends ApplicationAdapter {
             if (pontos > pontuacaoMaxima) {
                 pontuacaoMaxima = pontos;
                 preferencias.putInteger("pontuacaoMaxima", pontuacaoMaxima);
+                preferencias.flush();
             }
             posicaoHorizontalPassaro -= Gdx.graphics.getDeltaTime() * 500;
 
